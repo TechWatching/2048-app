@@ -3,18 +3,38 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "typecheck": "nuxt typecheck",
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:game": "eslint \"app/components/game/**/*.vue\" \"app/composables/**/*.ts\"",
+    "lint:game:fix": "eslint \"app/components/game/**/*.vue\" \"app/composables/**/*.ts\" --fix"
   },
   "dependencies": {
+    "@nuxt/eslint": "1.13.0",
     "@nuxt/fonts": "^0.12.1",
     "@nuxt/ui": "^4.3.0",
     "nuxt": "^4.2.2",
     "tailwindcss": "^4.1.18",
     "vue": "^3.5.27",
     "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
+    "@vitejs/plugin-vue": "^6.0.3",
+    "@vitest/expect": "^4.0.18",
+    "@vue/test-utils": "^2.4.6",
+    "eslint": "^9.39.2",
+    "eslint-plugin-vue": "^10.7.0",
+    "jsdom": "^27.4.0",
+    "vitest": "^4.0.18",
+    "vue-eslint-parser": "^10.2.0",
+    "vue-tsc": "^3.2.4"
   }
 }

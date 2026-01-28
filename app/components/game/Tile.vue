@@ -17,7 +17,7 @@ const tileConfig: Record<number, { bg: string; text: string; size: string }> = {
   1024: { bg: 'bg-yellow-700', text: 'text-white', size: 'text-2xl' },
   2048: { bg: 'bg-yellow-500', text: 'text-white', size: 'text-2xl' }
 }
-
+//const variableInutile = 'test';
 const config = computed(() => {
   return tileConfig[props.value] || { bg: 'bg-gray-800', text: 'text-white', size: 'text-xl' }
 })
