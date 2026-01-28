@@ -82,3 +82,4 @@ export const useGameState = () => {
     saveBestScore
   }
 }
+
