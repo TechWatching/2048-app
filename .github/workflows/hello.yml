@@ -8,13 +8,17 @@ jobs:
 
     steps:
       - name: Récupérer le code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Installer Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'  
 
       - name: Installer pnpm
-        run: npm install -g pnpm
+        uses: pnpm/actions-setup@v3
+        with:
+          version: 8
 
       - name: Lancer le script lab2
-        run: ./pipelines/script.sh
+        run: bash pipelines/script.sh
