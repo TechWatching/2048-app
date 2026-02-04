@@ -11,4 +11,4 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Lancer le script lab2
-        run: ./pipeline/script.sh
+        run: ./pipelines/script.sh
