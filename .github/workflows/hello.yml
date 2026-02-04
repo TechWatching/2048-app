@@ -13,17 +13,14 @@ jobs:
           node-version: '18'
       
       - name: Installer pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 8
-      
-      - name: Configurer pnpm
-        run: |
-          pnpm config set shamefully-hoist true
-          pnpm config set auto-install-peers true
+        run: npm install -g pnpm@8
       
       - name: Installer les dépendances
-        run: pnpm install --no-frozen-lockfile
+        run: |
+          pnpm config set shamefully-hoist true
+          pnpm install --shamefully-hoist --no-frozen-lockfile
       
       - name: Lancer le script lab2
-        run: ./pipelines/script.sh
+        run: |
+          chmod +x ./pipelines/script.sh
+          ./pipelines/script.sh
