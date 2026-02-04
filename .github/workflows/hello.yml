@@ -1,30 +1,23 @@
-name: Run Lab2 Script
-on: [push]
+name: Run Lab 2 Script
+
+on:
+  push:
+    branches:
+      - lab3
 
 jobs:
-  run-script:
+  run_lab2:
     runs-on: ubuntu-latest
     steps:
-      - name: Récupérer le code
-        uses: actions/checkout@v4 
+      - uses: actions/checkout@v4
 
-      - name: Installer pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Installer Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'pnpm' 
+          node-version: 20
 
-      - name: Installer les dépendances
-        run: |
-          pnpm config set shamefully-hoist true
-          pnpm install --shamefully-hoist
+      - name: Install pnpm
+        run: npm install -g pnpm
 
-      - name: Lancer le script lab2
-        run: |
-          chmod +x ./pipelines/script.sh
-          ./pipelines/script.sh
+      - name: Run CI script
+        run: ./pipelines/script.sh
