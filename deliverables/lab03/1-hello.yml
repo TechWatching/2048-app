@@ -1,14 +1,11 @@
-name: Run Lab2 Script
+name: Hello Pipeline
 
 on: [push]
 
 jobs:
-  run-script:
+  say-hello:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Récupérer le code
-        uses: actions/checkout@v4
-
-      - name: Lancer le script lab2
-        run: ./pipeline/script.sh
+      - name: Afficher le message
+        run: echo "Hello pipelines' world !"
