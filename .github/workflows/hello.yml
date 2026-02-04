@@ -1,23 +1,27 @@
-name: Run Lab 2 Script
+name: Run Lab2 Script
 
-on:
-  push:
-    branches:
-      - lab3
+on: [push]
 
 jobs:
-  run_lab2:
+  run-script:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '18'  
 
-      - name: Install pnpm
+      - name: Installer pnpm
         run: npm install -g pnpm
 
-      - name: Run CI script
-        run: ./pipelines/script.sh
+      - name: Installer les dépendances
+        run: |
+          pnpm install --no-frozen-lockfile
+          pnpm rebuild
+
+      - name: Lancer le script lab2
+        run: bash pipelines/script.sh
