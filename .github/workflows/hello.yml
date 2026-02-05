@@ -29,8 +29,8 @@ jobs:
 
       - name: Exécution du script de pipeline
         run: |
-          chmod +x ./pipelines/pipeline.sh
-          ./pipelines/pipeline.sh
+          chmod +x ./pipelines/script.sh
+          ./pipelines/script.sh
 
       - name: Upload des artefacts de build
         uses: actions/upload-artifact@v4
