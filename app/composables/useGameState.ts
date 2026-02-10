@@ -1,3 +1,5 @@
+import { useState } from '#app'
+
 type Grid = [number[], number[], number[], number[]]
 
 export const useGameState = () => {

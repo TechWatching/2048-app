@@ -1,3 +1,5 @@
+import { useGameLogic } from '~/composables/useGameLogic'
+
 export const useGameControls = () => {
   const { move } = useGameLogic()
 
