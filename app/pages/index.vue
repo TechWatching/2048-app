@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue'
+import { useGameControls } from '~/composables/useGameControls'
+import { useGameState } from '~/composables/useGameState'
+
 const { resetGame, loadBestScore } = useGameState()
 const { initControls, destroyControls } = useGameControls()
 
