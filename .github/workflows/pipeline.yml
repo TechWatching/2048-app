@@ -1,4 +1,5 @@
-name: Pipeline CI/CD Parallélisée - Lab2
+name: Pipeline CI/CD - Lab2
+
 on:
   push:
     branches:
@@ -13,58 +14,30 @@ on:
     - cron: '0 8 * * *'
 
 jobs:
-  quality-and-tests:
+  build-and-test:
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout du code
         uses: actions/checkout@v4
-      
-      - name: Installation de pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-      
-      - name: Installation de Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-      
-      - name: Installation des dépendances
-        run: pnpm install --no-frozen-lockfile
-      
-      - name: Vérification Qualité
-        run: |
-          pnpm lint
-          pnpm typecheck 
-      
-      - name: Exécution des Tests
-        run: pnpm test
 
-  build-and-package:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
-      
       - name: Installation de pnpm
         uses: pnpm/action-setup@v2
         with:
           version: 8
-      
+
       - name: Installation de Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
-      
-      - name: Installation des dépendances
-        run: pnpm install --no-frozen-lockfile
-      
-      - name: Construction du package (Build)
-        run: pnpm build
-      
-      - name: Vérification du fonctionnement du package
+
+      - name: Exécution du script de pipeline
+        run: |
+          chmod +x ./pipelines/script.sh
+          ./pipelines/script.sh
+
+      - name: Vérification du fonctionnement du package(test pour le fichier de sortie existe)
         run: |
           if [ -d ".output" ] && [ -f ".output/server/index.mjs" ]; then
             echo "Succès : Le dossier .output est valide"
@@ -72,7 +45,7 @@ jobs:
             echo "Erreur : Le build a échoué"
             exit 1
           fi
-      
+
       - name: Upload des artefacts de build
         if: success()
         uses: actions/upload-artifact@v4
