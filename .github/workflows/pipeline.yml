@@ -1,9 +1,10 @@
-name: Pipeline CI/CD
+name: Pipeline CI/CD - Lab2
 
 on:
   push:
     branches:
       - main
+      - lab2
       - lab3
   pull_request:
     branches:
@@ -17,22 +18,33 @@ jobs:
       - name: Checkout du code
         uses: actions/checkout@v4
 
-      - name: Installation de Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
       - name: Installation de pnpm
         uses: pnpm/action-setup@v2
         with:
           version: 8
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
 
       - name: Exécution du script de pipeline
         run: |
           chmod +x ./pipelines/script.sh
           ./pipelines/script.sh
 
+      - name: Vérification du fonctionnement du package(test pour le fichier de sortie existe)
+        run: |
+          if [ -d ".output" ] && [ -f ".output/server/index.mjs" ]; then
+            echo "Succès : Le dossier .output est valide"
+          else
+            echo "Erreur : Le build a échoué"
+            exit 1
+          fi
+
       - name: Upload des artefacts de build
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: build-output
