@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - lab2
+      - lab3
       - 'feature/*'
   pull_request:
     branches:
