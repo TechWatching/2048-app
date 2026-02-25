@@ -1,4 +1,4 @@
-name: Pipeline CI/CD - Lab2
+name: Pipeline CI/CD - Lab4
 
 on:
   push:
@@ -11,6 +11,7 @@ on:
   pull_request:
     branches:
       - main
+      - lab4
     paths-ignore:
       - 'docs/**'
 
