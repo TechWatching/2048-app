@@ -12,6 +12,18 @@ on:
     paths-ignore:
       - "docs/**"
   workflow_dispatch:
+    inputs:
+      run_checks:
+        description: Run lint/typecheck/tests
+        type: boolean
+        default: true
+      environment:
+        description: Deployment environment
+        type: choice
+        options:
+          - QA
+          - PROD
+        default: QA
 
 env:
   NODE_VERSION: 20
@@ -47,7 +59,7 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.run_checks == true)
     needs: build
     steps:
       - uses: actions/checkout@v4
@@ -66,7 +78,7 @@ jobs:
 
   typecheck:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.run_checks == true)
     needs: build
     steps:
       - uses: actions/checkout@v4
@@ -85,7 +97,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.run_checks == true)
     needs: build
     steps:
       - uses: actions/checkout@v4
@@ -101,3 +113,12 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
+
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    needs: [build, lint, typecheck, test]
+    steps:
+      - run: echo "Deploying to $ENVIRONMENT"
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
