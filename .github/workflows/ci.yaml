@@ -43,6 +43,7 @@ jobs:
             .output/**
             dist/**
           if-no-files-found: warn
+          retention-days: ${{ github.ref == 'refs/heads/main' && 7 || 1 }}
 
   lint:
     runs-on: ubuntu-latest
