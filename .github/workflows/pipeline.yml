@@ -95,7 +95,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
-      - name: Installation des dépendances
+      - name: Installation des dépendance
         run: pnpm install
 
       - name: Build Nuxt pour lint
