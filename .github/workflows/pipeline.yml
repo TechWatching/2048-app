@@ -18,9 +18,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-test:
+
+  build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout du code
         uses: actions/checkout@v4
@@ -30,18 +31,19 @@ jobs:
         with:
           version: 8
 
-      - name: Installation de Node.js
+      - name: Installation de Node.js (avec cache pnpm)
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
 
-      - name: Exécution du script de pipeline
-        run: |
-          chmod +x ./pipelines/script.sh
-          ./pipelines/script.sh
+      - name: Installation des dépendances
+        run: pnpm install
 
-      - name: Vérification du fonctionnement du package(test pour le fichier de sortie existe)
+      - name: Build de l'application
+        run: pnpm build
+
+      - name: Vérification du build
         run: |
           if [ -d ".output" ] && [ -f ".output/server/index.mjs" ]; then
             echo "Succès : Le dossier .output est valide"
@@ -50,10 +52,65 @@ jobs:
             exit 1
           fi
 
-      - name: Upload des artefacts de build
-        if: success()
+      - name: Upload de l'artifact de build
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: build-output
-          path: .output/server/index.mjs
+          path: .output/
           retention-days: 7
+
+  lint-typecheck:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Installation de pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Installation de Node.js (avec cache pnpm)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Installation des dépendances
+        run: pnpm install
+
+      - name: Analyse statique (linter)
+        run: pnpm lint
+
+      - name: Vérification du typage statique
+        run: pnpm typecheck
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Installation de pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Installation de Node.js (avec cache pnpm)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Installation des dépendances
+        run: pnpm install
+
+      - name: Exécution des tests unitaires
+        run: pnpm vitest run
