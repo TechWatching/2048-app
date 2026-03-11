@@ -1,0 +1,79 @@
+
+
+stages:
+  - build
+  - lint
+  - typecheck
+  - test
+  - deploy
+
+variables:
+  NODE_VERSION: "20"
+
+cache:
+  paths:
+    - node_modules/
+
+build:
+  stage: build
+  image: node:20
+  script:
+    - npm install -g pnpm
+    - pnpm install
+    - pnpm build
+    - |
+      if [ -d ".output" ] && [ -f ".output/server/index.mjs" ]; then
+        echo "Succès : le build est valide"
+      else
+        echo "Erreur : le build a échoué"
+        exit 1
+      fi
+  artifacts:
+    paths:
+      - .output/server/index.mjs
+    expire_in: 7 days
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "lab4"
+
+lint:
+  stage: lint
+  image: node:20
+  needs: ["build"]
+  script:
+    - npm install -g pnpm
+    - pnpm install
+    - pnpm exec eslint "*.{vue,ts,js}"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+typecheck:
+  stage: typecheck
+  image: node:20
+  needs: ["build"]
+  script:
+    - npm install -g pnpm
+    - pnpm install
+    - pnpm vue-tsc --noEmit --project .nuxt/tsconfig.json
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+unit-tests:
+  stage: test
+  image: node:20
+  needs: ["build"]
+  script:
+    - npm install -g pnpm
+    - pnpm install
+    - pnpm vitest run
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+deploy:
+  stage: deploy
+  needs: ["build"]
+  script:
+    - echo "Deploying to $ENVIRONMENT"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: manual
