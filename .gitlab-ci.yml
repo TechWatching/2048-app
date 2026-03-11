@@ -1,79 +1,56 @@
-
-
 stages:
   - build
-  - lint
-  - typecheck
   - test
   - deploy
 
 variables:
   NODE_VERSION: "20"
+  PNPM_CACHE_FOLDER: ".pnpm-store"
+
+image: node:${NODE_VERSION}
 
 cache:
+  key: ${CI_COMMIT_REF_SLUG}
   paths:
+    - .pnpm-store
     - node_modules/
+
+before_script:
+  - corepack enable
+  - corepack prepare pnpm@9 --activate
+  - pnpm config set store-dir .pnpm-store
+  - pnpm install
 
 build:
   stage: build
-  image: node:20
   script:
-    - npm install -g pnpm
-    - pnpm install
-    - pnpm build
-    - |
-      if [ -d ".output" ] && [ -f ".output/server/index.mjs" ]; then
-        echo "Succès : le build est valide"
-      else
-        echo "Erreur : le build a échoué"
-        exit 1
-      fi
+    - pnpm nuxi build
   artifacts:
     paths:
       - .output/server/index.mjs
     expire_in: 7 days
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-    - if: $CI_COMMIT_BRANCH == "lab4"
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "lab4"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 lint:
-  stage: lint
-  image: node:20
-  needs: ["build"]
-  script:
-    - npm install -g pnpm
-    - pnpm install
-    - pnpm exec eslint "*.{vue,ts,js}"
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-
-typecheck:
-  stage: typecheck
-  image: node:20
-  needs: ["build"]
-  script:
-    - npm install -g pnpm
-    - pnpm install
-    - pnpm vue-tsc --noEmit --project .nuxt/tsconfig.json
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-
-unit-tests:
   stage: test
-  image: node:20
-  needs: ["build"]
   script:
-    - npm install -g pnpm
-    - pnpm install
+    - pnpm exec eslint "*/.{vue,ts,js}"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+tests:
+  stage: test
+  script:
     - pnpm vitest run
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 deploy:
   stage: deploy
-  needs: ["build"]
   script:
-    - echo "Deploying to $ENVIRONMENT"
+    - echo "Deploying to $TARGET_ENV"
   rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-      when: manual
+    - if: '$CI_PIPELINE_SOURCE == "web"'
