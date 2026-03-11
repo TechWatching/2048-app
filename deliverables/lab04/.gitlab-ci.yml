@@ -1,0 +1,85 @@
+stages: [build, check, deploy]
+
+variables:
+  NODE_VERSION: "20"
+  PNPM_VERSION: "10.28.2"
+  PNPM_STORE_DIR: ".pnpm-store"
+  RUN_CHECKS: "true"       # variable utilisée quand tu lances manuellement
+  ENVIRONMENT: "QA"        # QA ou PROD quand tu lances manuellement
+
+default:
+  image: node:${NODE_VERSION}
+  before_script:
+    - corepack enable
+    - corepack prepare pnpm@${PNPM_VERSION} --activate
+    - pnpm config set store-dir ${PNPM_STORE_DIR}
+    - pnpm install --frozen-lockfile
+  cache:
+    key: pnpm-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .pnpm-store/
+      - node_modules/
+
+# Crée des pipelines seulement pour :
+# - push sur lab4
+# - MR vers lab4
+# - manuel (web)
+# - schedule
+# et ignore les changements uniquement dans docs/
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "lab4"'
+      changes: ["**/*", "!docs/**"]
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "lab4"'
+      changes: ["**/*", "!docs/**"]
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - when: never
+
+build:
+  stage: build
+  script:
+    - pnpm build
+  artifacts:
+    paths:
+      - .output/
+      - dist/
+    when: on_success
+    expire_in: 1 day
+
+# Checks seulement pour MR, ou manuel si RUN_CHECKS=true
+lint:
+  stage: check
+  needs: ["build"]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "lab4"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $RUN_CHECKS == "true"'
+    - when: never
+  script: pnpm lint
+
+typecheck:
+  stage: check
+  needs: ["build"]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "lab4"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $RUN_CHECKS == "true"'
+    - when: never
+  script: pnpm typecheck
+
+test:
+  stage: check
+  needs: ["build"]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "lab4"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $RUN_CHECKS == "true"'
+    - when: never
+  script: pnpm test
+
+deploy:
+  stage: deploy
+  needs: ["build"]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - when: never
+  script:
+    - echo "Deploying to ${ENVIRONMENT}"

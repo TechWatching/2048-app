@@ -1,0 +1,10 @@
+# build / output
+.output/
+dist/
+publish/
+.nuxt/
+node_modules/
+
+# coverage / logs
+coverage/
+*.log
