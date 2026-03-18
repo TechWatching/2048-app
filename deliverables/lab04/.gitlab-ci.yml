@@ -20,12 +20,7 @@ default:
       - .pnpm-store/
       - node_modules/
 
-# Crée des pipelines seulement pour :
-# - push sur lab4
-# - MR vers lab4
-# - manuel (web)
-# - schedule
-# et ignore les changements uniquement dans docs/
+
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "lab4"'
