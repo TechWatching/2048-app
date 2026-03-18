@@ -142,9 +142,9 @@ jobs:
       url: https://2048-app-snowy.vercel.app
     steps:
       - uses: actions/checkout@v4
-      - run: pnpm add -g vercel
-      - run: |
-          echo "Déploiement sur Vercel"
-          vercel --prod --confirm --token ${{ secrets.VERCEL_TOKEN }} \
-            --scope ${{ secrets.VERCEL_ORG_ID }} \
-            --project ${{ secrets.VERCEL_PROJECT_ID }}
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - run: pnpm dlx vercel --prod --confirm --token ${{ secrets.VERCEL_TOKEN }} \
+          --scope ${{ secrets.VERCEL_ORG_ID }} \
+          --project ${{ secrets.VERCEL_PROJECT_ID }}
