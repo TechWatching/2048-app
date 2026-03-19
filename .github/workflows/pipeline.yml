@@ -91,7 +91,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
       - run: pnpm install
-      - run: pnpm exec eslint "*/.{vue,ts,js}"
+      - run: pnpm exec eslint "**/*.{vue,ts,js}"  
 
   typecheck:
     if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.run_checks == 'true')
