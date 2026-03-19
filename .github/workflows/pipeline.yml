@@ -1,92 +1,98 @@
 name: Pipeline CI/CD - Lab5
 
+
+env:
+  NODE_VERSION: 20
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
 on:
   push:
     branches:
       - main
-      - lab4
+      - lab5
     paths-ignore:
       - 'docs/**'
 
   pull_request:
     branches:
       - main
-      - lab4
+      - lab5
     paths-ignore:
       - 'docs/**'
 
   workflow_dispatch:
     inputs:
-      run_analyses:
-        description: 'Lancer les analyses statiques et les tests'
+      run_checks:
+        description: "Run static analysis and tests"
         type: boolean
         default: true
       environment:
-        description: "Environnement cible de déploiement"
+        description: "Target environment"
         type: choice
         options:
           - QA
           - PROD
-
-env:
-  NODE_VERSION: '20'
+        default: PROD
 
 jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install
 
   build:
     runs-on: ubuntu-latest
+    needs: install
     steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
-        
-      - name: Installation de pnpm
-        uses: pnpm/action-setup@v2
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
         with:
-          version: 8
-          
-      - name: Installation de Node.js (avec cache pnpm)
-        uses: actions/setup-node@v4
+          version: 9
+
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-          
-      - name: Installation des dépendances
-        run: pnpm install
-        
-      - name: Build de l'application
-        run: pnpm build
-        
-      - name: Vérification du build
-        run: |
-          if [ -d ".output" ] && [ -f ".output/server/index.mjs" ]; then
-            echo "Succès : Le dossier .output est valide"
-          else
-            echo "Erreur : Le build a échoué"
-            exit 1
-          fi
-          
-      - name: Upload de l'artifact de build
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'  # ✅
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: .output/server/index.mjs
-          retention-days: ${{ github.ref == 'refs/heads/main' && 7 || 1 }}
+          cache: pnpm
 
-  
+      - run: pnpm install
+      - run: pnpm nuxi build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nuxt-build
+          path: .output/server/index.mjs
+          retention-days: 7
+
   lint:
     if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.run_checks == 'true')
     runs-on: ubuntu-latest
     needs: build
     steps:
       - uses: actions/checkout@v4
+
       - uses: pnpm/action-setup@v2
         with:
           version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: pnpm
+
       - run: pnpm install
       - run: pnpm exec eslint "*/.{vue,ts,js}"
 
@@ -96,65 +102,118 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v4
+
       - uses: pnpm/action-setup@v2
         with:
           version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: pnpm
+
       - run: pnpm install
+      - run: pnpm nuxi prepare
       - run: pnpm vue-tsc --noEmit --project .nuxt/tsconfig.json
 
-  unit-tests:
+  tests:
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.run_checks == 'true')
     runs-on: ubuntu-latest
     needs: build
-    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.run_analyses == 'true')
-
-    steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
-
-      - name: Installation de pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Installation de Node.js (avec cache pnpm)
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Installation des dépendances
-        run: pnpm install
-
-      - name: Exécution des tests unitaires
-        run: pnpm vitest run
-
-  deploy:
-    if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: production
     steps:
       - uses: actions/checkout@v4
-      
-      - uses: actions/download-artifact@v4
-        with:
-          name: build-output        
-          path: .output
-      
+
       - uses: pnpm/action-setup@v2
         with:
-          version: 8             
-      
+          version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      
-      - run: pnpm dlx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-      
-      - run: pnpm dlx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+          cache: pnpm
+
+      - run: pnpm install
+      - run: pnpm vitest run
+
+  deploy_preview:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - lint
+      - typecheck
+      - tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: nuxt-build
+          path: .output/server/index.mjs
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm add -g vercel
+      - run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      - run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+
+  deploy_production:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'PROD'
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    environment:
+      name: Production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: nuxt-build
+          path: .output/server/index.mjs
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm add -g vercel
+      - run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+  deploy_qa:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'QA'
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: nuxt-build
+          path: .output/server/index.mjs
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm add -g vercel
+      - run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      - run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
