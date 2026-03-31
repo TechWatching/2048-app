@@ -21,6 +21,9 @@ export default [
       'no-undef': 'off',
       'vue/no-unused-vars': 'error',
       'no-unused-vars': 'error',
+      'vue/multi-word-component-names': 'off',
+      'vue/singleline-html-element-content-newline': 'off',
+      'vue/max-attributes-per-line': 'off',
     },
   },
   {
