@@ -91,7 +91,6 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
       - run: pnpm install
-      - run: pnpm nuxi build
       - run: pnpm exec eslint "**/*.{vue,ts,js}"
 
   typecheck:

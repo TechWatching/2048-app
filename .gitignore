@@ -23,6 +23,6 @@ logs
 .env.*
 !.env.example
 
-notes.md
 
 .output
+.vercel
