@@ -77,12 +77,6 @@ jobs:
           path: .output/server/index.mjs
           retention-days: 7
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: nuxt-dir
-          path: .nuxt/
-          retention-days: 1
-
   lint:
     if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.run_checks == 'true')
     runs-on: ubuntu-latest
@@ -96,12 +90,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-      - uses: actions/download-artifact@v4
-        with:
-          name: nuxt-dir
-          path: .nuxt/
-
       - run: pnpm install
+      - run: pnpm nuxi build
       - run: pnpm exec eslint "**/*.{vue,ts,js}"
 
   typecheck:
