@@ -132,7 +132,7 @@ jobs:
       - run: pnpm install
       - run: pnpm vitest run
 
-  deploy_preview:
+  deploy-preview:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     needs:
@@ -161,8 +161,8 @@ jobs:
       - run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
       - run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
 
-  deploy_production:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'PROD'
+  deploy-production:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'PROD')
     runs-on: ubuntu-latest
     needs:
       - build
@@ -189,8 +189,8 @@ jobs:
       - run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
       - run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
 
-  deploy_qa:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'QA'
+  deploy-qa:
+    if: (github.event_name == 'push' && github.ref != 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'QA')
     runs-on: ubuntu-latest
     needs:
       - build
@@ -213,4 +213,4 @@ jobs:
 
       - run: pnpm add -g vercel
       - run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-      - run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - run: vercel deploy --token=${{ secrets.VERCEL_TOKEN }}
