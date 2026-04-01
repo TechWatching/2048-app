@@ -10,7 +10,7 @@
 
 - Le **déploiement de preview** se déclenche automatiquement lors d'une Pull Request grâce à `if: github.event_name == 'pull_request'`. Cela permet de tester une modification dans un environnement isolé avant de la fusionner.
 
-- Le **blue-green deployment** consiste à promouvoir un déploiement preview vers la production depuis l'interface Vercel ("Promote to Production"), ce qui bascule le trafic instantanément sans downtime.
+- **Le blue-green deployment** est une stratégie de déploiement qui permet de basculer entre deux versions d'une application sans interruption de service
 
 ## Difficultés rencontrées
 
