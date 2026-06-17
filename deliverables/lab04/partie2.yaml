@@ -1,41 +1,20 @@
-name: CI 
-
-env:
-  NODE_VERSION: '22'
+name: CI
 
 on:
   push:
-    branches: [lab4]
+    branches: [ main ]
     paths-ignore:
       - 'docs/**'
-
   pull_request:
-    branches: [lab4]
+    branches: [ main ]
     paths-ignore:
       - 'docs/**'
-
   workflow_dispatch:
-    inputs:
-      launchStatiticAnalyse:
-        description: 'Whether to launch static analysis (lint and typecheck) or not'
-        required: false
-        type: boolean
-        default: true
-
-      environment:
-        description: 'Deployment environment'
-        required: false
-        type: choice
-        options:
-          - dev
-          - prod
-          - QA
-          - UAT
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -46,11 +25,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          node-version: 22
+          cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Build
         run: pnpm build
@@ -61,12 +40,12 @@ jobs:
         with:
           name: 2048-app-build
           path: .output/
-          retention-days: ${{ github.ref == 'refs/heads/main' && 7 || 1 }}
 
   lint:
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'pull_request'
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -77,11 +56,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          node-version: 22
+          cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Lint
         run: pnpm lint
@@ -90,6 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'pull_request'
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -100,11 +80,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          node-version: 22
+          cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Type checking
         run: pnpm typecheck
@@ -113,6 +93,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'pull_request'
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -123,21 +104,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          node-version: 22
+          cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Run tests
         run: pnpm test
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Deploy to environment
-        env:
-          ENVIRONMENT: ${{ inputs.environment }}
-        run: echo "Deploying to $ENVIRONMENT"

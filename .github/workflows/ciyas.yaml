@@ -1,4 +1,4 @@
-name: CI 
+name: CI Yasmine
 
 env:
   NODE_VERSION: '22'
