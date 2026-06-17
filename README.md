@@ -102,3 +102,7 @@ nuxt.config.ts        # Nuxt configuration
 
 > [!NOTE]
 > For questions or feedback, please open an issue or discussion in this repository.
+test lab4 trigger
+pr check
+trigger pr mar. 03 mars 2026 23:26:47 CET
+retrigger mar. 03 mars 2026 23:41:00 CET
